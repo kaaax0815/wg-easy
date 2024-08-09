@@ -1108,6 +1108,7 @@
 import '~/assets/css/app.css';
 import { sha256 } from 'js-sha256';
 import { format as timeago } from 'timeago.js';
+import * as ClientsCmp from '@/components/Clients';
 
 useHead({
   bodyAttrs: {
