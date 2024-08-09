@@ -38,11 +38,11 @@ importers:
         specifier: ^2.2.1
         version: 2.2.1(typescript@5.5.4)(vue@3.4.35(typescript@5.5.4))
       qrcode:
-        specifier: ^1.5.3
-        version: 1.5.3
+        specifier: ^1.5.4
+        version: 1.5.4
       tailwindcss:
-        specifier: ^3.4.7
-        version: 3.4.7
+        specifier: ^3.4.9
+        version: 3.4.9
       timeago.js:
         specifier: ^4.0.2
         version: 4.0.2
@@ -3365,12 +3365,6 @@ packages:
         integrity: sha512-L18DaJsXSUk2+42pv8mLs5jJT2hqFkFE4j21wOmgbUqsZ2hL72NsUU785g9RXgo3s0ZNgVl42TiHp3ZtOv/Vyg==,
       }
 
-  encode-utf8@1.0.3:
-    resolution:
-      {
-        integrity: sha512-ucAnuBEhUK4boH2HjVYG5Q2mQyPorvv0u/ocS+zhdw0S8AlHYY+GOFhP1Gio5z4icpP2ivFSvhtFjQi8+T9ppw==,
-      }
-
   encodeurl@1.0.2:
     resolution:
       {
@@ -5877,10 +5871,10 @@ packages:
       }
     engines: { node: '>=6' }
 
-  qrcode@1.5.3:
+  qrcode@1.5.4:
     resolution:
       {
-        integrity: sha512-puyri6ApkEHYiVl4CFzo1tDkAZ+ATcnbJrJ6RiBM1Fhctdn/ix9MTE3hRph33omisEbC/2fcfemsseiKgBPKZg==,
+        integrity: sha512-1ca71Zgiu6ORjHqFBDpnSMTR2ReToX4l1Au1VFLyVeBTFavzQnv5JxMFr3ukHVKpSrSA2MCk0lNJSykjUfz7Zg==,
       }
     engines: { node: '>=10.13.0' }
     hasBin: true
@@ -6617,10 +6611,10 @@ packages:
     peerDependencies:
       tailwindcss: 1 || 2 || 2.0.1-compat || 3
 
-  tailwindcss@3.4.7:
+  tailwindcss@3.4.9:
     resolution:
       {
-        integrity: sha512-rxWZbe87YJb4OcSopb7up2Ba4U82BoiSGUdoDr3Ydrg9ckxFS/YWsvhN323GMcddgU65QRy7JndC7ahhInhvlQ==,
+        integrity: sha512-1SEOvRr6sSdV5IDf9iC+NU4dhwdqzF4zKKq3sAbasUWHEM6lsMhX+eNN5gkPx1BvLFEnZQEUFbXnGj8Qlp83Pg==,
       }
     engines: { node: '>=14.0.0' }
     hasBin: true
@@ -8390,8 +8384,8 @@ snapshots:
       pathe: 1.1.2
       postcss: 8.4.40
       postcss-nesting: 12.1.5(postcss@8.4.40)
-      tailwind-config-viewer: 2.0.4(tailwindcss@3.4.7)
-      tailwindcss: 3.4.7
+      tailwind-config-viewer: 2.0.4(tailwindcss@3.4.9)
+      tailwindcss: 3.4.9
       ufo: 1.5.4
       unctx: 2.3.1
     transitivePeerDependencies:
@@ -9604,8 +9598,6 @@ snapshots:
   emoji-regex@8.0.0: {}
 
   emoji-regex@9.2.2: {}
-
-  encode-utf8@1.0.3: {}
 
   encodeurl@1.0.2: {}
 
@@ -11315,10 +11307,9 @@ snapshots:
 
   punycode@2.3.1: {}
 
-  qrcode@1.5.3:
+  qrcode@1.5.4:
     dependencies:
       dijkstrajs: 1.0.3
-      encode-utf8: 1.0.3
       pngjs: 5.0.0
       yargs: 15.4.1
 
@@ -11750,7 +11741,7 @@ snapshots:
 
   system-architecture@0.1.0: {}
 
-  tailwind-config-viewer@2.0.4(tailwindcss@3.4.7):
+  tailwind-config-viewer@2.0.4(tailwindcss@3.4.9):
     dependencies:
       '@koa/router': 12.0.1
       commander: 6.2.1
@@ -11760,11 +11751,11 @@ snapshots:
       open: 7.4.2
       portfinder: 1.0.32
       replace-in-file: 6.3.5
-      tailwindcss: 3.4.7
+      tailwindcss: 3.4.9
     transitivePeerDependencies:
       - supports-color
 
-  tailwindcss@3.4.7:
+  tailwindcss@3.4.9:
     dependencies:
       '@alloc/quick-lru': 5.2.0
       arg: 5.0.2
