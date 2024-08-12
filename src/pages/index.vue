@@ -1150,6 +1150,10 @@ onMounted(() => {
   api
     .getSession()
     .then((session) => {
+      if (session.requiresPassword && !session.authenticated) {
+        window.location.replace('/login');
+      }
+
       authenticated.value = session.authenticated;
       requiresPassword.value = session.requiresPassword;
       refresh({

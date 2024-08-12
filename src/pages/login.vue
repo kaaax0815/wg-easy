@@ -100,6 +100,7 @@ function login(e: Event) {
       const session = await api.getSession();
       authenticated.value = session.authenticated;
       requiresPassword.value = session.requiresPassword;
+      window.location.replace('/');
     })
     .catch((err) => {
       // TODO: replace alert with actual ui error message
@@ -110,4 +111,12 @@ function login(e: Event) {
       password.value = null;
     });
 }
+
+onMounted(() => {
+  api.getSession().then((session) => {
+    if (session.authenticated || !session.requiresPassword) {
+      window.location.replace('/');
+    }
+  });
+});
 </script>

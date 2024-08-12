@@ -1,5 +1,5 @@
 <template>
-  <header>
+  <header class="container mx-auto max-w-3xl">
     <div
       class="flex flex-col-reverse xxs:flex-row flex-auto items-center gap-3"
     >
@@ -92,7 +92,7 @@
           </svg>
         </label>
         <span
-          v-if="requiresPassword"
+          v-if="requiresPassword && authenticated"
           class="text-sm text-gray-400 dark:text-neutral-400 cursor-pointer hover:underline"
           @click="logout"
         >
@@ -196,9 +196,23 @@ function logout(e: Event) {
     .then(() => {
       authenticated.value = false;
       clients.value = null;
+
+      window.location.replace('/login');
     })
     .catch((err) => {
       alert(err.message || err.toString());
     });
 }
+
+onMounted(() => {
+  api
+    .getSession()
+    .then((session) => {
+      authenticated.value = session.authenticated;
+      requiresPassword.value = session.requiresPassword;
+    })
+    .catch((err) => {
+      alert(err.message || err.toString());
+    });
+});
 </script>
