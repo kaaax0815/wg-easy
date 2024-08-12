@@ -10,7 +10,6 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
-    "dev:pass": "PASSWORD_HASH='$2a$12$CbBOmHX80.nrqswwxHaCz.yUHrKTxaJTYNWrlFfqtSqO7yJ8nWcgW' nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
