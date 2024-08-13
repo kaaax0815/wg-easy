@@ -17,8 +17,8 @@ export default {
     },
     extend: {
       colors: {
-        DEFAULT: red[800],
-        primary: red[800],
+        //DEFAULT: red[800],
+        //primary: red[800],
       },
     },
   },
