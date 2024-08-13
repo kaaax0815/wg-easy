@@ -35,8 +35,4 @@
   </footer>
 </template>
 
-<script setup lang="ts">
-definePageMeta({
-  layout: 'footer',
-});
-</script>
+<script setup lang="ts"></script>
