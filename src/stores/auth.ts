@@ -21,5 +21,13 @@ export const useAuthStore = defineStore('Auth', () => {
     return response.success;
   }
 
-  return { requiresPassword, authenticated, login, logout }
+  async function update() {
+    const response = await useUISession();
+    if (response) {
+      authenticated.value = response.authenticated;
+      requiresPassword.value = response.requiresPassword;
+    }
+  }
+
+  return { requiresPassword, authenticated, login, logout, update }
 })

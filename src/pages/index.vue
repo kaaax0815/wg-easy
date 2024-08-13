@@ -1,5 +1,5 @@
 <template>
-  <div v-cloak class="container mx-auto max-w-3xl px-3 md:px-0 mt-4 xs:mt-6">
+  <div class="container mx-auto max-w-3xl px-3 md:px-0">
     <div
       class="shadow-md rounded-lg bg-white dark:bg-neutral-700 overflow-hidden"
     >
@@ -821,6 +821,9 @@
 <script setup lang="ts">
 import { sha256 } from 'js-sha256';
 import { format as timeago } from 'timeago.js';
+
+const authStore = useAuthStore();
+authStore.update();
 
 const UI_CHART_TYPES = [
   { type: false, strokeWidth: 0 },

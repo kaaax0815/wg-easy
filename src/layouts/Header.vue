@@ -1,5 +1,5 @@
 <template>
-  <header class="container mx-auto max-w-3xl">
+  <header class="container mx-auto max-w-3xl px-3 md:px-0 mt-4 xs:mt-6">
     <div
       class="flex flex-col-reverse xxs:flex-row flex-auto items-center gap-3"
     >

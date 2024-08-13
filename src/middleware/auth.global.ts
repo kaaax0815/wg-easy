@@ -1,3 +1,4 @@
+// TODO: move middleware to server
 export default defineNuxtRouteMiddleware(async (to) => {
   // TODO?: cache session
   const session = await useUISession();
