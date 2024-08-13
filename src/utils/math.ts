@@ -1,4 +1,9 @@
-export function bytes(bytes: number, decimals = 2, kib = false, maxunit?: string) {
+export function bytes(
+  bytes: number,
+  decimals = 2,
+  kib = false,
+  maxunit?: string
+) {
   if (bytes === 0) return '0 B';
   if (Number.isNaN(bytes) && !Number.isFinite(bytes)) return 'NaN';
   const k = kib ? 1024 : 1000;
@@ -13,4 +18,14 @@ export function bytes(bytes: number, decimals = 2, kib = false, maxunit?: string
     if (index !== -1) i = index;
   }
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
+
+export function dateTime(value: Date) {
+  return new Intl.DateTimeFormat(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+  }).format(value);
 }

@@ -10,12 +10,12 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
   if (to.path === '/login') {
     if (session.authenticated || !session.requiresPassword) {
-      return navigateTo('/')
+      return navigateTo('/');
     }
   }
   if (to.path === '/') {
     if (!session.authenticated) {
-      return navigateTo('/login')
+      return navigateTo('/login');
     }
   }
-})
+});
