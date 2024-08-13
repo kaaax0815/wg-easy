@@ -387,10 +387,11 @@ const globalStore = useGlobalStore();
 const clientsStore = useClientsStore();
 const modalStore = useModalStore();
 
+const intervalId = ref<NodeJS.Timeout | null>(null);
+
 onMounted(() => {
   // TODO?: replace with websocket or similar
-  // TODO: clear interval
-  setInterval(() => {
+  intervalId.value = setInterval(() => {
     clientsStore
       .refresh({
         updateCharts: globalStore.updateCharts,
@@ -403,5 +404,12 @@ onMounted(() => {
   globalStore.fetchChartType();
 
   globalStore.fetchRelease();
+});
+
+onUnmounted(() => {
+  if (intervalId.value !== null) {
+    clearInterval(intervalId.value);
+    intervalId.value = null;
+  }
 });
 </script>
