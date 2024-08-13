@@ -12,79 +12,20 @@
           </p>
         </div>
         <div class="flex md:block md:flex-shrink-0">
-          <!-- Restore configuration -->
           <ClientsRestoreConfig />
-          <!-- Backup configuration -->
           <ClientsBackupConfig />
-          <!-- New client -->
-          <button
-            class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 dark:text-neutral-200 max-md:border-l-0 border-2 border-gray-100 dark:border-neutral-600 py-2 px-4 rounded-r-full md:rounded inline-flex items-center transition"
-            @click="
-              modalStore.clientCreate = true;
-              modalStore.clientCreateName = '';
-            "
-          >
-            <svg
-              class="w-4 md:mr-2"
-              inline
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
-            <span class="max-md:hidden text-sm">{{ $t('new') }}</span>
-          </button>
+          <ClientsNew />
         </div>
       </div>
 
       <div>
-        <!-- Client -->
-        <div v-if="clientsStore.clients && clientsStore.clients.length > 0">
-          <div
-            v-for="client in clientsStore.clients"
-            :key="client.id"
-            class="relative overflow-hidden border-b last:border-b-0 border-gray-100 dark:border-neutral-600 border-solid"
-          >
-            <Client :client="client" />
-          </div>
-        </div>
+        <Clients
+          v-if="clientsStore.clients && clientsStore.clients.length > 0"
+        />
       </div>
-      <div v-if="clientsStore.clients && clientsStore.clients.length === 0">
-        <p class="text-center m-10 text-gray-400 dark:text-neutral-400 text-sm">
-          {{ $t('noClients') }}<br /><br />
-          <button
-            class="bg-red-800 hover:bg-red-700 text-white border-2 border-none py-2 px-4 rounded inline-flex items-center transition"
-            @click="
-              modalStore.clientCreate = true;
-              modalStore.clientCreateName = '';
-            "
-          >
-            <svg
-              class="w-4 mr-2"
-              inline
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
-            <span class="text-sm">{{ $t('newClient') }}</span>
-          </button>
-        </p>
-      </div>
+      <ClientsEmpty
+        v-if="clientsStore.clients && clientsStore.clients.length === 0"
+      />
       <div
         v-if="clientsStore.clients === null"
         class="text-gray-200 dark:text-red-300 p-5"
