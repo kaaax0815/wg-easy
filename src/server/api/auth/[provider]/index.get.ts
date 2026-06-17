@@ -37,8 +37,7 @@ export default defineEventHandler(async (event) => {
     state: state,
   };
 
-  const session = await useWGSession(event);
-  await session.update({
+  await updateWGSession(event, {
     oauth_nonce: nonce,
     oauth_verifier: codeVerifier,
     oauth_state: state,

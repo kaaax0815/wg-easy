@@ -39,7 +39,6 @@ export default defineEventHandler(async (event) => {
           pendingLogin: {
             type: 'oauth',
             userId: result.userId,
-            remember: false,
             // 5min
             expires_at: Date.now() + 5 * 60 * 1000,
           },

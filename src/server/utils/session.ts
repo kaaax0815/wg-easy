@@ -1,12 +1,12 @@
-import type { H3Event } from 'h3';
+import type { H3Event, SessionData } from 'h3';
 import type { UserType } from '#db/repositories/user/types';
 
 export type WGSession = Partial<{
   userId: ID;
+  rememberMe: boolean;
   pendingLogin: {
     type: 'password' | 'oauth';
     userId: ID;
-    remember: boolean;
     /** in milliseconds */
     expires_at: number;
   };
@@ -17,16 +17,32 @@ export type WGSession = Partial<{
 
 const name = 'wg-easy';
 
-export async function useWGSession(event: H3Event, rememberMe = false) {
+function getMaxAge(rememberMe: boolean, sessionTimeout: number) {
+  if (rememberMe) {
+    return sessionTimeout;
+  }
+  // 15min (instead of default 1h)
+  const SHORT_SESSION_TIMEOUT = 15 * 60;
+  // use shorter timeout
+  return Math.min(sessionTimeout, SHORT_SESSION_TIMEOUT);
+}
+
+export async function useWGSession(event: H3Event) {
+  const session = await getWGSession(event);
   const sessionConfig = await Database.general.getSessionConfig();
+
+  const maxAge = getMaxAge(
+    session.data.rememberMe ?? false,
+    sessionConfig.sessionTimeout
+  );
+
   return useSession<WGSession>(event, {
     password: sessionConfig.sessionPassword,
     name,
-    // TODO: add session expiration
-    // maxAge: undefined
+    maxAge,
     cookie: {
-      maxAge: rememberMe ? sessionConfig.sessionTimeout : undefined,
       secure: !WG_ENV.INSECURE,
+      maxAge,
     },
   });
 }
@@ -40,6 +56,40 @@ export async function getWGSession(event: H3Event) {
       secure: !WG_ENV.INSECURE,
     },
   });
+}
+
+// Types copied from h3 source code
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SessionDataT = Record<string, any>;
+type SessionUpdate<T extends SessionDataT = SessionDataT> =
+  | Partial<SessionData<T>>
+  | ((oldData: SessionData<T>) => Partial<SessionData<T>> | undefined);
+
+export async function updateWGSession(
+  event: H3Event,
+  update?: SessionUpdate<WGSession>
+) {
+  const session = await getWGSession(event);
+  const sessionConfig = await Database.general.getSessionConfig();
+
+  const maxAge = getMaxAge(
+    session.data.rememberMe ?? false,
+    sessionConfig.sessionTimeout
+  );
+
+  return updateSession<WGSession>(
+    event,
+    {
+      password: sessionConfig.sessionPassword,
+      name,
+      maxAge,
+      cookie: {
+        secure: !WG_ENV.INSECURE,
+        maxAge,
+      },
+    },
+    update
+  );
 }
 
 /**
@@ -120,6 +170,11 @@ export async function getCurrentUser(event: H3Event) {
       statusCode: 403,
       statusMessage: 'User is disabled',
     });
+  }
+
+  if (session.data.userId) {
+    // reseal cookie to update max age
+    await updateWGSession(event);
   }
 
   return user;

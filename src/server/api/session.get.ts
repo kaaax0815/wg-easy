@@ -1,5 +1,5 @@
 export default defineEventHandler(async (event) => {
-  const session = await useWGSession(event);
+  const session = await getWGSession(event);
 
   if (!session.data.userId || session.data.pendingLogin) {
     // not logged in

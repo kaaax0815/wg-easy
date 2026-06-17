@@ -15,8 +15,6 @@ export default defineEventHandler(async (event) => {
 
   const result = await Database.users.login(username, password);
 
-  const session = await useWGSession(event, remember);
-
   // TODO: add localization support
 
   if (!result.success) {
@@ -27,11 +25,11 @@ export default defineEventHandler(async (event) => {
           statusMessage: 'Invalid username or password',
         });
       case 'TOTP_REQUIRED':
-        await session.update({
+        await updateWGSession(event, {
+          rememberMe: remember,
           pendingLogin: {
             type: 'password',
             userId: result.userId,
-            remember,
             // 5min
             expires_at: Date.now() + 5 * 60 * 1000,
           },
@@ -55,7 +53,8 @@ export default defineEventHandler(async (event) => {
 
   const user = result.user;
 
-  const data = await session.update({
+  const data = await updateWGSession(event, {
+    rememberMe: remember,
     userId: user.id,
   });
 

@@ -1,7 +1,5 @@
 export default defineEventHandler(async (event) => {
-  const session = await useWGSession(event);
-
-  await session.update({
+  await updateWGSession(event, {
     pendingLogin: undefined,
     oauth_nonce: undefined,
     oauth_state: undefined,
