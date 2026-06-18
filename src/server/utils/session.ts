@@ -27,6 +27,9 @@ function getMaxAge(rememberMe: boolean, sessionTimeout: number) {
   return Math.min(sessionTimeout, SHORT_SESSION_TIMEOUT);
 }
 
+/**
+ * Don't use `session.update()` for setting `rememberMe`, use {@link updateWGSession}
+ */
 export async function useWGSession(event: H3Event) {
   const session = await getWGSession(event);
   const sessionConfig = await Database.general.getSessionConfig();
@@ -42,6 +45,7 @@ export async function useWGSession(event: H3Event) {
     maxAge,
     cookie: {
       secure: !WG_ENV.INSECURE,
+      expires: undefined,
       maxAge,
     },
   });
@@ -49,21 +53,28 @@ export async function useWGSession(event: H3Event) {
 
 export async function getWGSession(event: H3Event) {
   const sessionConfig = await Database.general.getSessionConfig();
+
+  // this only matters for new empty sessions
+  const maxAge = getMaxAge(false, sessionConfig.sessionTimeout);
+
   return getSession<WGSession>(event, {
     password: sessionConfig.sessionPassword,
     name,
+    maxAge,
     cookie: {
       secure: !WG_ENV.INSECURE,
+      expires: undefined,
+      maxAge,
     },
   });
 }
 
-// Types copied from h3 source code
+// Types copied from h3 source code (removed update being a fn)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SessionDataT = Record<string, any>;
-type SessionUpdate<T extends SessionDataT = SessionDataT> =
-  | Partial<SessionData<T>>
-  | ((oldData: SessionData<T>) => Partial<SessionData<T>> | undefined);
+type SessionUpdate<T extends SessionDataT = SessionDataT> = Partial<
+  SessionData<T>
+>;
 
 export async function updateWGSession(
   event: H3Event,
@@ -73,7 +84,7 @@ export async function updateWGSession(
   const sessionConfig = await Database.general.getSessionConfig();
 
   const maxAge = getMaxAge(
-    session.data.rememberMe ?? false,
+    update?.rememberMe ?? session.data.rememberMe ?? false,
     sessionConfig.sessionTimeout
   );
 
@@ -85,6 +96,7 @@ export async function updateWGSession(
       maxAge,
       cookie: {
         secure: !WG_ENV.INSECURE,
+        expires: undefined,
         maxAge,
       },
     },

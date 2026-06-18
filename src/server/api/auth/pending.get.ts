@@ -8,9 +8,7 @@ export default defineEventHandler(async (event) => {
     });
   }
   if (new Date() > new Date(session.data.pendingLogin.expires_at)) {
-    await session.update({
-      pendingLogin: undefined,
-    });
+    await session.clear();
 
     throw createError({
       statusCode: 401,

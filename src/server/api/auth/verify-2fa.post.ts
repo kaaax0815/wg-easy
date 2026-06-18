@@ -15,9 +15,7 @@ export default defineEventHandler(async (event) => {
     });
   }
   if (new Date() > new Date(pendingLogin.expires_at)) {
-    await session.update({
-      pendingLogin: undefined,
-    });
+    await session.clear();
 
     return { status: 'PENDING_LOGIN_EXPIRED' as const };
   }
