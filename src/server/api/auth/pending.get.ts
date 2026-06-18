@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'No pending authentication',
     });
   }
-  if (new Date() > new Date(session.data.pendingLogin.expires_at)) {
+  if (new Date() > new Date(session.data.pendingLogin.expiresAt)) {
     await session.clear();
 
     throw createError({

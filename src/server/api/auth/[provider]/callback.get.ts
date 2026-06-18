@@ -35,12 +35,12 @@ export default defineEventHandler(async (event) => {
   if (!result.success) {
     switch (result.error) {
       case 'TOTP_REQUIRED':
-        await session.update({
+        await updateWGSession(event, {
           pendingLogin: {
             type: 'oauth',
             userId: result.userId,
             // 5min
-            expires_at: Date.now() + 5 * 60 * 1000,
+            expiresAt: Date.now() + 5 * 60 * 1000,
           },
           oauth_nonce: undefined,
           oauth_state: undefined,
@@ -73,7 +73,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Create session
-  const data = await session.update({
+  const data = await updateWGSession(event, {
     userId: result.user.id,
     oauth_nonce: undefined,
     oauth_state: undefined,

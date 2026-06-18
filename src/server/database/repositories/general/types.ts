@@ -23,4 +23,9 @@ export const GeneralUpdateSchema = z.object({
 
 export type GeneralUpdateType = z.infer<typeof GeneralUpdateSchema>;
 
+export type SessionConfig = Pick<
+  GeneralType,
+  'sessionPassword' | 'sessionTimeout'
+>;
+
 export type SetupStepType = { step: number; done: boolean };

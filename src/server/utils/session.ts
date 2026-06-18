@@ -1,5 +1,6 @@
 import type { H3Event, SessionData } from 'h3';
 import type { UserType } from '#db/repositories/user/types';
+import type { SessionConfig } from '#db/repositories/general/types';
 
 export type WGSession = Partial<{
   userId: ID;
@@ -8,65 +9,109 @@ export type WGSession = Partial<{
     type: 'password' | 'oauth';
     userId: ID;
     /** in milliseconds */
-    expires_at: number;
+    expiresAt: number;
   };
   oauth_verifier: string;
   oauth_nonce: string;
   oauth_state: string;
+  /** in milliseconds */
+  expiresAt: number;
 }>;
 
 const name = 'wg-easy';
+const SHORT_SESSION_TIMEOUT = 15 * 60;
 
+function getSessionConfig(sessionConfig: SessionConfig, rememberMe = false) {
+  return {
+    password: sessionConfig.sessionPassword,
+    name,
+    cookie: {
+      secure: !WG_ENV.INSECURE,
+      expires: undefined,
+      // expiration is handled by code
+      maxAge: rememberMe ? sessionConfig.sessionTimeout : undefined,
+    },
+  };
+}
+
+/**
+ * @returns in seconds
+ */
 function getMaxAge(rememberMe: boolean, sessionTimeout: number) {
-  if (rememberMe) {
-    return sessionTimeout;
+  return rememberMe
+    ? sessionTimeout
+    : Math.min(sessionTimeout, SHORT_SESSION_TIMEOUT);
+}
+
+function getSessionExpiresAt(rememberMe: boolean, sessionTimeout: number) {
+  return Date.now() + getMaxAge(rememberMe, sessionTimeout) * 1000;
+}
+
+function checkSessionExpiration(session: { data: SessionData<WGSession> }) {
+  if (!session.data.expiresAt) {
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'Invalid session',
+    });
   }
-  // 15min (instead of default 1h)
-  const SHORT_SESSION_TIMEOUT = 15 * 60;
-  // use shorter timeout
-  return Math.min(sessionTimeout, SHORT_SESSION_TIMEOUT);
+
+  if (new Date() > new Date(session.data.expiresAt)) {
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'Session expired',
+    });
+  }
 }
 
 /**
  * Don't use `session.update()` for setting `rememberMe`, use {@link updateWGSession}
  */
 export async function useWGSession(event: H3Event) {
-  const session = await getWGSession(event);
   const sessionConfig = await Database.general.getSessionConfig();
 
-  const maxAge = getMaxAge(
-    session.data.rememberMe ?? false,
-    sessionConfig.sessionTimeout
+  let session = await useSession<WGSession>(
+    event,
+    getSessionConfig(sessionConfig)
   );
 
-  return useSession<WGSession>(event, {
-    password: sessionConfig.sessionPassword,
-    name,
-    maxAge,
-    cookie: {
-      secure: !WG_ENV.INSECURE,
-      expires: undefined,
-      maxAge,
-    },
-  });
+  if (!session.data.expiresAt) {
+    session = await session.update({
+      expiresAt: getSessionExpiresAt(
+        session.data.rememberMe ?? false,
+        sessionConfig.sessionTimeout
+      ),
+    });
+  }
+
+  checkSessionExpiration(session);
+
+  return session;
 }
 
 export async function getWGSession(event: H3Event) {
   const sessionConfig = await Database.general.getSessionConfig();
 
-  // this only matters for new empty sessions
-  const maxAge = getMaxAge(false, sessionConfig.sessionTimeout);
+  let session = await getSession<WGSession>(
+    event,
+    getSessionConfig(sessionConfig)
+  );
 
-  return getSession<WGSession>(event, {
-    password: sessionConfig.sessionPassword,
-    name,
-    maxAge,
-    cookie: {
-      secure: !WG_ENV.INSECURE,
-      expires: undefined,
-      maxAge,
-    },
-  });
+  if (!session.data.expiresAt) {
+    session = await updateSession<WGSession>(
+      event,
+      getSessionConfig(sessionConfig, session.data.rememberMe ?? false),
+      {
+        expiresAt: getSessionExpiresAt(
+          session.data.rememberMe ?? false,
+          sessionConfig.sessionTimeout
+        ),
+      }
+    );
+  }
+
+  checkSessionExpiration(session);
+
+  return session;
 }
 
 // Types copied from h3 source code (removed update being a fn)
@@ -80,89 +125,94 @@ export async function updateWGSession(
   event: H3Event,
   update?: SessionUpdate<WGSession>
 ) {
-  const session = await getWGSession(event);
   const sessionConfig = await Database.general.getSessionConfig();
-
-  const maxAge = getMaxAge(
-    update?.rememberMe ?? session.data.rememberMe ?? false,
-    sessionConfig.sessionTimeout
-  );
-
-  return updateSession<WGSession>(
+  const currentSession = await getSession<WGSession>(
     event,
-    {
-      password: sessionConfig.sessionPassword,
-      name,
-      maxAge,
-      cookie: {
-        secure: !WG_ENV.INSECURE,
-        expires: undefined,
-        maxAge,
-      },
-    },
-    update
+    getSessionConfig(sessionConfig)
   );
+  const rememberMe =
+    update?.rememberMe ?? currentSession.data.rememberMe ?? false;
+
+  if (currentSession.data.expiresAt) {
+    checkSessionExpiration(currentSession);
+  }
+
+  const sessionUpdate: SessionUpdate<WGSession> = {
+    ...(update ?? {}),
+    expiresAt: getSessionExpiresAt(rememberMe, sessionConfig.sessionTimeout),
+  };
+
+  const session = await updateSession<WGSession>(
+    event,
+    getSessionConfig(sessionConfig, rememberMe),
+    sessionUpdate
+  );
+
+  checkSessionExpiration(session);
+
+  return session;
+}
+
+async function getBasicAuthUser(authorization: string) {
+  if (WG_ENV.DISABLE_PASSWORD_AUTH) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Password authentication is disabled',
+    });
+  }
+
+  const [method, value] = authorization.split(' ');
+  if (method !== 'Basic' || !value) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Invalid Basic Authorization',
+    });
+  }
+
+  const basicValue = Buffer.from(value, 'base64').toString('utf-8');
+  const index = basicValue.indexOf(':');
+  const username = basicValue.substring(0, index);
+  const password = basicValue.substring(index + 1);
+
+  if (!username || !password) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Invalid Basic Authorization',
+    });
+  }
+
+  const foundUser = await Database.users.getByUsername(username);
+  // always check to avoid timing attack
+  const userHashPassword = foundUser?.password ?? null;
+  const passwordValid = await isPasswordValid(password, userHashPassword);
+
+  // can't login through basic auth if 2fa enabled
+  if (!foundUser || !passwordValid || foundUser.totpVerified) {
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'Session failed',
+    });
+  }
+
+  return foundUser;
 }
 
 /**
  * @throws
  */
 export async function getCurrentUser(event: H3Event) {
-  const session = await getWGSession(event);
+  const session = await useWGSession(event);
 
   const authorization = getHeader(event, 'Authorization');
 
   let user: UserType | undefined;
-  if (session.data.userId) {
-    // Handle if authenticating using Session
-    user = await Database.users.get(session.data.userId);
-  } else if (authorization) {
-    if (WG_ENV.DISABLE_PASSWORD_AUTH) {
-      throw createError({
-        statusCode: 403,
-        statusMessage: 'Password authentication is disabled',
-      });
-    }
-
-    // Handle if authenticating using Header
-    const [method, value] = authorization.split(' ');
+  if (authorization) {
     // Support Basic Authentication
     // TODO: support personal access token or similar
-    if (method !== 'Basic' || !value) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Invalid Basic Authorization',
-      });
-    }
-
-    const basicValue = Buffer.from(value, 'base64').toString('utf-8');
-
-    // Split by first ":"
-    const index = basicValue.indexOf(':');
-    const username = basicValue.substring(0, index);
-    const password = basicValue.substring(index + 1);
-
-    if (!username || !password) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Invalid Basic Authorization',
-      });
-    }
-
-    const foundUser = await Database.users.getByUsername(username);
-
-    // always check to avoid timing attack
-    const userHashPassword = foundUser?.password ?? null;
-    const passwordValid = await isPasswordValid(password, userHashPassword);
-
-    // can't login through basic auth if 2fa enabled
-    if (!foundUser || !passwordValid || foundUser.totpVerified) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Session failed',
-      });
-    }
-    user = foundUser;
+    user = await getBasicAuthUser(authorization);
+  } else if (session.data.userId) {
+    // Handle if authenticating using Session
+    user = await Database.users.get(session.data.userId);
   } else {
     throw createError({
       statusCode: 401,

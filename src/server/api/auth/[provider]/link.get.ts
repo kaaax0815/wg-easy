@@ -31,7 +31,7 @@ export default definePermissionEventHandler(
 
     await Database.users.linkOauth(user.id, provider, userInfo.sub);
 
-    await session.update({
+    await updateWGSession(event, {
       oauth_nonce: undefined,
       oauth_state: undefined,
       oauth_verifier: undefined,

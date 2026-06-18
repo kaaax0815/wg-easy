@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'No pending authentication',
     });
   }
-  if (new Date() > new Date(pendingLogin.expires_at)) {
+  if (new Date() > new Date(pendingLogin.expiresAt)) {
     await session.clear();
 
     return { status: 'PENDING_LOGIN_EXPIRED' as const };
@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
       assertUnreachable(totpStatus);
   }
 
-  await session.update({
+  await updateWGSession(event, {
     userId: pendingLogin.userId,
     pendingLogin: undefined,
     oauth_nonce: undefined,

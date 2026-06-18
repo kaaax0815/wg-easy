@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
             type: 'password',
             userId: result.userId,
             // 5min
-            expires_at: Date.now() + 5 * 60 * 1000,
+            expiresAt: Date.now() + 5 * 60 * 1000,
           },
         });
         return { status: 'TOTP_REQUIRED' as const };
